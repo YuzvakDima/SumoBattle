@@ -5,18 +5,20 @@ public class EnemyBehavior : MonoBehaviour
     public float speed;
     private Rigidbody rb;
     private GameObject player;
-    private SpawnEnemy spawnenemy;
+    private SpawnEnemy spawnEnemy;
     private SpawnPoints spawnPoints;
-    private PointSystem pointsystem;
+    private PointSystem pointSystem;
     private GameObject point;
+    private KillCount count;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        spawnenemy = FindObjectOfType<SpawnEnemy>();
+        spawnEnemy = FindObjectOfType<SpawnEnemy>();
         player = GameObject.FindWithTag("Player");
         spawnPoints = FindObjectOfType<SpawnPoints>();
-        pointsystem = FindObjectOfType<PointSystem>();
+        pointSystem = FindObjectOfType<PointSystem>();
+        count = FindObjectOfType<KillCount>();
     }
     private void Update()
     {
@@ -26,33 +28,47 @@ public class EnemyBehavior : MonoBehaviour
             rb.velocity = Vector3.zero;
             return;
         }
-        if (spawnenemy.health > 1)
+        if (spawnEnemy.health <= 0)
         {
-            Vector3 lookDirection = player.transform.position - transform.position;
-            rb.AddForce(lookDirection.normalized * speed);
+            Destroy(gameObject);
+            spawnEnemy.spawning = false;
+            if (spawnEnemy.currentEnemy)
+            {
+                pointSystem.points++;
+                count.kills++;
+            }
+            else if (spawnEnemy.smallBoss)
+            {
+                pointSystem.points = pointSystem.points + 0.25f;
+                count.kills = count.kills + 0.25f;
+            }
+            else if (spawnEnemy.bigBoss)
+            {
+                pointSystem.points++;
+                count.kills++;
+            }
         }
-        if (spawnenemy.health == 1)
+        else if (spawnEnemy.health == 1 || spawnEnemy.health <= pointSystem.damage)
         {
             Vector3 lookDirection = point.transform.position - transform.position;
             rb.AddForce(lookDirection.normalized * (speed * 0.5f));
         }
-        if (spawnenemy.health <= 0)
+        else if (spawnEnemy.health > pointSystem.damage)
         {
-            Destroy(gameObject);
-            spawnenemy.spawning = false;
-            pointsystem.points++;
-        }   
+            Vector3 lookDirection = player.transform.position - transform.position;
+            rb.AddForce(lookDirection.normalized * speed);
+        }      
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.collider.tag == "Player")
         {
-            spawnenemy.health = spawnenemy.health - pointsystem.damage;
+            spawnEnemy.health = spawnEnemy.health - pointSystem.damage;
         }
         if (collision.collider.tag == "Point")
         {
-            spawnenemy.health++;
+            spawnEnemy.health++;
             Destroy(collision.gameObject);
             spawnPoints.spawning = false;
         }

@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class PointSystem : MonoBehaviour
 {
-    public int points = 1;
+    public float points = 1.00f;
     private SpawnPoints spawnPoints;
-    public int damage = 1;
+    public float damage = 1.00f;
 
     private void Start()
     {
@@ -23,7 +23,7 @@ public class PointSystem : MonoBehaviour
 
     private void Update()
     {
-        if (points == 5)
+        if (points >= 5)
         {
             damage++;
             points = 0;
